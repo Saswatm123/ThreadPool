@@ -2,57 +2,64 @@
 #include "threadpool.hpp"
 #include <atomic>
 
-class ConstructionLogger
+#ifndef TIMER_CHRONO_HPP
+#define TIMER_CHRONO_HPP
+
+    #include <iostream>
+    #include <chrono>
+
+    #define TIMING
+
+    #ifdef TIMING
+        #define INIT_TIMER auto start = std::chrono::high_resolution_clock::now();
+        #define START_TIMER start = std::chrono::high_resolution_clock::now();
+        #define STOP_TIMER(name)  std::cout << "RUNTIME of " << name << ": " << \
+            std::chrono::duration_cast<std::chrono::milliseconds>( \
+                    std::chrono::high_resolution_clock::now()-start \
+            ).count() << " ms " << std::endl;
+    #else
+        #define INIT_TIMER
+        #define START_TIMER
+        #define STOP_TIMER(name)
+    #endif
+
+#endif // TIMER_CHRONO_HPP
+
+#include <vector>
+
+void v_write(std::vector<int>& v, int pos)
 {
-    static std::atomic<int> total_default;
-    static std::atomic<int> total_copy;
-    static std::atomic<int> total_move;
-
-public:
-    ConstructionLogger()
-    {
-        total_default++;
-    }
-
-    ConstructionLogger(const ConstructionLogger&)
-    {
-        total_copy++;
-    }
-
-    ConstructionLogger(const ConstructionLogger&&)
-    {
-        total_move++;
-    }
-
-    static void report()
-    {
-        std::cout << "CONSTRUCTION LOGGER:" << std::endl;
-        std::cout << "\tDEFAULT CONSTRUCTOR WAS CALLED:\t" << total_default << " TIMES" << std::endl;
-        std::cout << "\tCOPY CONSTRUCTOR WAS CALLED:\t" << total_copy << " TIMES" << std::endl;
-        std::cout << "\tMOVE CONSTRUCTOR WAS CALLED:\t" << total_move << " TIMES" << std::endl;
-    }
-};
-
-std::atomic<int> ConstructionLogger::total_default(0);
-std::atomic<int> ConstructionLogger::total_copy(0);
-std::atomic<int> ConstructionLogger::total_move(0);
-
-void func(ConstructionLogger d)
-{}
+    v[pos] = pos;
+}
 
 int main()
 {
-    using namespace std::chrono_literals;
-
+    INIT_TIMER
+    std::vector<int> v(1000);
     {
-        threadpool tp(2);
+        threadpool tp(8);
 
-        for(int a = 0; a < 1; a++)
+        START_TIMER
+
+        // First bug: make a < 1000 because v size is 1000
+        for(int a = 0; a < 1000; a++)
         {
-            tp.submit_task(func, ConstructionLogger() );
+            tp.submit_task(v_write, v, a);
         }
-        std::cout << "END\n";
     }
-    std::this_thread::sleep_for(100ms);
-    ConstructionLogger::report();
+    STOP_TIMER("v write")
+
+    /*
+    std::cout << v.size() << std::endl;
+
+    for(int a = 0; a < 1000; a++)
+    {
+        std::cout << v[a] << std::endl;
+    }*/
+
+    /*
+    std::condition_variable cv;
+    std::mutex m;
+    std::unique_lock<std::mutex> ulock(m);
+    cv.wait(ulock, [&](){std::cout << "This is called" << std::endl; return 0;} );*/
 }

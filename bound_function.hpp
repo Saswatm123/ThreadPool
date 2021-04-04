@@ -4,15 +4,15 @@
 #include <future>
 #include <tuple>
 
-struct PolymorphicBoundFunction
+struct GenericBoundFunction
 {
     virtual void execute() = 0;
-    virtual ~PolymorphicBoundFunction(){}
+    virtual ~GenericBoundFunction(){};
 };
 
-// General template for non-void functions. Void functions have specialized BoundFunction below.
+// General BoundFunction template for non-void functions. Void functions have specialized BoundFunction below.
 template<typename ReturnType, typename... ArgPack>
-struct BoundFunction : PolymorphicBoundFunction
+struct BoundFunction : GenericBoundFunction
 {
 private:
     template<std::size_t... indices>
@@ -29,8 +29,7 @@ public:
 
     inline void execute()
     {
-        ReturnType res = this->execute_impl(std::index_sequence_for<ArgPack...>() );
-        this->prom.set_value(res);
+        this->prom.set_value( this->execute_impl(std::index_sequence_for<ArgPack...>() ) );
     }
 
     std::future<ReturnType> get_future()
@@ -38,14 +37,15 @@ public:
         return this->prom.get_future();
     }
 
-    BoundFunction(ReturnType(*const func)(ArgPack...), ArgPack... args)
-    :func(func), args(args...)
+    template<typename... ArgumentFwdTypes>
+    BoundFunction(ReturnType(*const func)(ArgPack...), ArgumentFwdTypes... args)
+    :func(func), args( std::forward<ArgumentFwdTypes>(args)... )
     {}
 };
 
 // Specialization for functions with void return type.
 template<typename... ArgPack>
-struct BoundFunction<void, ArgPack...> : PolymorphicBoundFunction
+struct BoundFunction<void, ArgPack...> : GenericBoundFunction
 {
 private:
     template<std::size_t... indices>
@@ -70,15 +70,16 @@ public:
         return this->prom.get_future();
     }
 
-    BoundFunction(void(*const func)(ArgPack...), ArgPack... args)
-    :func(func), args(args...)
+    template<typename... ArgumentFwdTypes>
+    BoundFunction(void(*const func)(ArgPack...), ArgumentFwdTypes&&... args)
+    :func(func), args( std::forward<ArgumentFwdTypes>(args)...)
     {}
 };
 
-template<typename ReturnType, typename... ArgPack>
-BoundFunction<ReturnType, ArgPack...> make_task(ReturnType(*const func)(ArgPack...), ArgPack... args)
+template<typename ReturnType, typename... ArgPack, typename... ArgumentFwdTypes>
+BoundFunction<ReturnType, ArgPack...> make_bound_function(ReturnType(*const func)(ArgPack...), ArgumentFwdTypes&&... args)
 {
-    return BoundFunction<ReturnType, ArgPack...>(func, args...);
+    return BoundFunction<ReturnType, ArgPack...>(func, std::forward<ArgumentFwdTypes>(args)...);
 }
 
 #endif // TASK_THREADPOOL_HPP
