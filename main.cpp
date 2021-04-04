@@ -41,25 +41,10 @@ int main()
 
         START_TIMER
 
-        // First bug: make a < 1000 because v size is 1000
         for(int a = 0; a < 1000; a++)
         {
             tp.submit_task(v_write, v, a);
         }
     }
     STOP_TIMER("v write")
-
-    /*
-    std::cout << v.size() << std::endl;
-
-    for(int a = 0; a < 1000; a++)
-    {
-        std::cout << v[a] << std::endl;
-    }*/
-
-    /*
-    std::condition_variable cv;
-    std::mutex m;
-    std::unique_lock<std::mutex> ulock(m);
-    cv.wait(ulock, [&](){std::cout << "This is called" << std::endl; return 0;} );*/
 }
