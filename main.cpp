@@ -2,49 +2,39 @@
 #include "threadpool.hpp"
 #include <atomic>
 
-#ifndef TIMER_CHRONO_HPP
-#define TIMER_CHRONO_HPP
-
-    #include <iostream>
-    #include <chrono>
-
-    #define TIMING
-
-    #ifdef TIMING
-        #define INIT_TIMER auto start = std::chrono::high_resolution_clock::now();
-        #define START_TIMER start = std::chrono::high_resolution_clock::now();
-        #define STOP_TIMER(name)  std::cout << "RUNTIME of " << name << ": " << \
-            std::chrono::duration_cast<std::chrono::milliseconds>( \
-                    std::chrono::high_resolution_clock::now()-start \
-            ).count() << " ms " << std::endl;
-    #else
-        #define INIT_TIMER
-        #define START_TIMER
-        #define STOP_TIMER(name)
-    #endif
-
-#endif // TIMER_CHRONO_HPP
+#include "utils/timer.hpp"
 
 #include <vector>
+
+#include <chrono>
+#include <thread>
 
 void v_write(std::vector<int>& v, int pos)
 {
     v[pos] = pos;
+    std::this_thread::sleep_for(std::chrono::seconds(1) );
 }
 
 int main()
 {
     INIT_TIMER
-    std::vector<int> v(1000);
+    std::vector<int> v(16);
     {
         threadpool tp(8);
 
         START_TIMER
 
-        for(int a = 0; a < 1000; a++)
+        for(int a = 0; a < 16; a++)
         {
             tp.submit_task(v_write, v, a);
         }
     }
-    STOP_TIMER("v write")
+    STOP_TIMER("threadpool")
+
+    START_TIMER
+    for(int a = 0; a < 16; a++)
+    {
+        v_write(v, a);
+    }
+    STOP_TIMER("single-threaded")
 }
