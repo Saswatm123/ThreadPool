@@ -1,22 +1,22 @@
 #include <iostream>
 #include "threadpool.hpp"
-#include <atomic>
 
 #include "utils/timer.hpp"
-
-#include <vector>
+#include "utils/construction_logger.hpp"
 
 #include <chrono>
 #include <thread>
 
-void v_write(std::vector<int>& v, int pos)
+void demo_func(ConstructionLogger i, bool b = false)
 {
-    v[pos] = pos;
-    std::this_thread::sleep_for(std::chrono::seconds(1) );
+    std::cout << "Func called" << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(200) );
 }
 
 int main()
 {
+    ConstructionLogger c(false);
+
     INIT_TIMER
     std::vector<int> v(16);
     {
@@ -26,15 +26,17 @@ int main()
 
         for(int a = 0; a < 16; a++)
         {
-            tp.submit_task(v_write, v, a);
+            tp.submit_task(demo_func, c);
         }
     }
-    STOP_TIMER("threadpool")
+    STOP_TIMER("multi-threaded")
 
     START_TIMER
     for(int a = 0; a < 16; a++)
     {
-        v_write(v, a);
+        demo_func(c);
     }
     STOP_TIMER("single-threaded")
+
+    ConstructionLogger::report();
 }

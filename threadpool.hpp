@@ -35,8 +35,8 @@ public:
 
     unsigned get_thread_count();
 
-    template<typename ReturnType, typename... ArgTypes, typename... ArgumentFwdTypes>
-    std::future<ReturnType> submit_task(ReturnType(function)(ArgTypes...), ArgumentFwdTypes&&... args);
+    template<typename ReturnType, typename... ParamTypes, typename... ArgumentFwdTypes>
+    std::future<ReturnType> submit_task(ReturnType(function)(ParamTypes...), ArgumentFwdTypes&&... args);
 
     threadpool(unsigned thread_count, bool complete_upon_destruction = 1);
 

@@ -11,7 +11,7 @@ struct GenericBoundFunction
 };
 
 // General BoundFunction template for non-void functions. Void functions have specialized BoundFunction below.
-template<typename ReturnType, typename... ArgPack>
+template<typename ReturnType, typename FunctionType, typename... ArgPack>
 struct BoundFunction : GenericBoundFunction
 {
 private:
@@ -19,7 +19,7 @@ private:
     ReturnType execute_impl(std::index_sequence<indices...>);
 
     std::tuple<ArgPack...> args;
-    ReturnType(*const func)(ArgPack...);
+    FunctionType func;
     std::promise<ReturnType> prom;
 
 public:
@@ -34,19 +34,19 @@ public:
     // the arguments to pass into the function. F(a, b) would be called as
     // BoundFunction(F, a, b).
     template<typename... ArgumentFwdTypes>
-    BoundFunction(ReturnType(*const func)(ArgPack...), ArgumentFwdTypes... args);
+    BoundFunction(FunctionType func, ArgumentFwdTypes&&... args);
 };
 
 // Specialization for functions with void return type.
-template<typename... ArgPack>
-struct BoundFunction<void, ArgPack...> : GenericBoundFunction
+template<typename FunctionType, typename... ArgPack>
+struct BoundFunction<void, FunctionType, ArgPack...> : GenericBoundFunction
 {
 private:
     template<std::size_t... indices>
     void execute_impl(std::index_sequence<indices...>);
 
     std::tuple<ArgPack...> args;
-    void(*const func)(ArgPack...);
+    FunctionType func;
     std::promise<void> prom;
 
 public:
@@ -61,11 +61,11 @@ public:
     // the arguments to pass into the function. F(a, b) would be called as
     // BoundFunction(F, a, b).
     template<typename... ArgumentFwdTypes>
-    BoundFunction(void(*const func)(ArgPack...), ArgumentFwdTypes&&... args);
+    BoundFunction(FunctionType func, ArgumentFwdTypes&&... args);
 };
 
-template<typename ReturnType, typename... ArgPack, typename... ArgumentFwdTypes>
-BoundFunction<ReturnType, ArgPack...> make_bound_function(ReturnType(*const func)(ArgPack...), ArgumentFwdTypes&&... args);
+template<typename ReturnType, typename... ParamTypes, typename... ArgumentFwdTypes>
+auto make_bound_function(ReturnType(func)(ParamTypes...), ArgumentFwdTypes&&... args);
 
 #include "bound_function.tpp"
 
