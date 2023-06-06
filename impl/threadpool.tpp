@@ -1,7 +1,7 @@
 #include "func_tools.hpp"
 
 template<typename ReturnType, typename... ParamTypes, typename... ArgumentFwdTypes>
-std::future<ReturnType> threadpool::submit_task(ReturnType(function)(ParamTypes...), ArgumentFwdTypes&&... args)
+std::future<ReturnType> ThreadPool::submit_task(ReturnType(function)(ParamTypes...), ArgumentFwdTypes&&... args)
 {
     /*
         Current function ptr type includes the type of all parameters in the function (ex. void(int, char) ).

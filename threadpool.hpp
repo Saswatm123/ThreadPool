@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <list>
 
-class threadpool
+class ThreadPool
 {
     const unsigned thread_count;
     const bool complete_upon_destruction;
@@ -38,9 +38,9 @@ public:
     template<typename ReturnType, typename... ParamTypes, typename... ArgumentFwdTypes>
     std::future<ReturnType> submit_task(ReturnType(function)(ParamTypes...), ArgumentFwdTypes&&... args);
 
-    threadpool(unsigned thread_count, bool complete_upon_destruction = 1);
+    ThreadPool(unsigned thread_count, bool complete_upon_destruction = 1);
 
-    ~threadpool();
+    ~ThreadPool();
 };
 
 #include "impl/threadpool.tpp"

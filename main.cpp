@@ -18,9 +18,8 @@ int main()
     ConstructionLogger c(false);
 
     INIT_TIMER
-    std::vector<int> v(16);
     {
-        threadpool tp(8);
+        ThreadPool tp(8);
 
         START_TIMER
 

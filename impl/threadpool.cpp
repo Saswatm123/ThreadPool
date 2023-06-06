@@ -1,6 +1,6 @@
 #include "../threadpool.hpp"
 
-void threadpool::wait_for_task()
+void ThreadPool::wait_for_task()
 {
     std::unique_lock<std::mutex> u_lock(this->queue_guard);
     while( !(this->task_queue.empty() && this->end_tasks) )
@@ -30,12 +30,12 @@ void threadpool::wait_for_task()
     }
 }
 
-unsigned threadpool::get_thread_count()
+unsigned ThreadPool::get_thread_count()
 {
     return thread_count;
 }
 
-threadpool::threadpool(unsigned thread_count, bool complete_upon_destruction)
+ThreadPool::ThreadPool(unsigned thread_count, bool complete_upon_destruction)
 :end_tasks(false), thread_count(thread_count), complete_upon_destruction(complete_upon_destruction)
 {
     for(int i = 0; i < thread_count; i++)
@@ -44,7 +44,7 @@ threadpool::threadpool(unsigned thread_count, bool complete_upon_destruction)
     }
 }
 
-threadpool::~threadpool()
+ThreadPool::~ThreadPool()
 {
     this->end_tasks = true;
     std::for_each(this->thread_container.begin(), this->thread_container.end(),
