@@ -11,6 +11,35 @@ This is a simple C++14 Thread Pool implementation. I will detail how to use it, 
 There is demonstration code written in `main.cpp`, and uses extra classes I wrote for throrough testing. I will go over usage here, but feel free to look
 at the extra examples in `main.cpp`. Here is some sample code:
 
+We initialize our `ThreadPool` using the following syntax:
+```
+int main()
+{
+    ThreadPool tp(8);
+}
+```
+This makes a pool of 8 threads waiting to be put to work. They are created upon construction & wake up when the pool has work to do. Until then, they are sleeping.
+
+Now we have to create some work for our threadpool to run. Let's make a test function:
+```
+#include <iostream>
+#include "threadpool.hpp"
+#include "utils/construction_logger.hpp"
+
+void demo_func(ConstructionLogger i, bool b = false)
+{
+    std::cout << "Func called" << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(200) );
+}
+
+int main()
+{
+    ThreadPool tp(8);
+}
+```
+`ConstructionLogger` is a helper class in `utils` that I use for testing and making sure we are using perfect forwarding each time. We will use this helper class in our example. `demo_func` takes in one of these as well as a default boolean argument. Note: most threadpool implementations don't allow for default arguments in functions, because of the issues with function pointers and default arguments, but this one handles those issues.
+We now simply submit this task to our `ThreadPool` as follows:
+
 ```
 #include <iostream>
 #include "threadpool.hpp"
@@ -24,7 +53,7 @@ void demo_func(ConstructionLogger i, bool b = false)
 int main()
 {
     ConstructionLogger c(false);
-    threadpool tp(8);
+    ThreadPool tp(8);
 
     for(int a = 0; a < 16; a++)
     {
@@ -32,15 +61,11 @@ int main()
     }
 }
 ```
-
-We initialize our threadpool with `threadpool tp(8)`, with the `8` meaning that we initialize our threadpool with 8 threads. The `ConstructionLogger` class above
-that is a helper class I wrote for testing (`utils/construction_logger.hpp`), and can be treated as some generic class object. The method `submit_task` returns 
-a `std::future<ReturnType>` with `ReturnType` being the return type of the function passed in. We can use these [Futures](https://en.cppreference.com/w/cpp/thread/future) as regular
-C++ futures, and retrieve values/block when needed.
+The method `submit_task` returns a `std::future<ReturnType>` with `ReturnType` being the return type of the function passed in. We can use these futures (https://en.cppreference.com/w/cpp/thread/future) as regular C++ futures, and retrieve values/block when needed. Since the demo function we use returns `void`, we simply don't collect any of the futures returned, since they're meaningless.
 
 ## Engineering Challenges
 
-### Storing Work, Function, Arguments
+### Storing Work, Functions, Arguments
 
 We store the work required in a Linked List for O(1) addition & removal. This is because we don't know when work will be completed, so we don't know in what order
 we will have to remove work - we have to be ready to remove work from anywhere. We get iterators to these Linked List nodes for O(1) retrieval, and store these
@@ -93,8 +118,8 @@ int main()
 }
 ```
 
-This gives us a compilation error, since the function signature of `func` tells the compiler that there should be two arguments. However, we know the last one should be optional.
-In order to get around this, we have to perform a `reinterpret_cast` from the type of the function pointer we have to the type of the function pointer that leaves out the default arguments that aren't provided.
+This gives us a compilation error, since the function signature of `func` tells the compiler that there should be two arguments. However, we know the last one should be optional. Getting around this with just the information provided above is widely believed to not be possible without creating another function/lambda to get around this issue (https://stackoverflow.com/questions/76351178/when-calling-a-function-through-a-function-pointer-why-is-it-that-default-argum). However, I've found another way to get around this, which allows for added user simplicity, since the user doesn't have to create extra function bindings/lambdas/etc.
+In order to get around this, the first step is to perform a `reinterpret_cast` from the type of the function pointer we have to the type of the function pointer that leaves out the default arguments that aren't provided.
 Here is a simple example:
 
 ```
