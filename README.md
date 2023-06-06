@@ -4,7 +4,7 @@ This is a simple C++14 Thread Pool implementation. I will detail how to use it, 
 
 - [Usage](#usage)
 - [Engineering Challenges](#engineering-challenges)
-    - [Storing Work, Functions, Arguments](#storing-work,-functions,-arguments)
+    - [Storing Work, Functions, Arguments](#storing-work-functions-arguments)
     - [Default Arguments with Function Pointers](#default-arguments-with-function-pointers)
 
 ## Usage
