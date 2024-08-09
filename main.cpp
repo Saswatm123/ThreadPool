@@ -7,7 +7,7 @@
 #include <chrono>
 #include <thread>
 
-void demo_func(ConstructionLogger i, bool b = false)
+void demo_func(ConstructionLogger i)
 {
     std::cout << "Func called" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(200) );
