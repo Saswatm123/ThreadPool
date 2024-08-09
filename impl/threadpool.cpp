@@ -40,7 +40,7 @@ ThreadPool::ThreadPool(unsigned thread_count, bool complete_upon_destruction)
 {
     for(int i = 0; i < thread_count; i++)
     {
-        this->thread_container.push_back(std::thread(this->wait_for_task, this) );
+        this->thread_container.push_back(std::thread( &ThreadPool::wait_for_task, this) );
     }
 }
 
