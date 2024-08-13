@@ -73,9 +73,10 @@ They then get to work completing the function call based on the function pointer
 they remove its corresponding Work node, containing the function information, as well as the arguments to be passed in, from the linked list, and go back & wait
 for more work to be available.
 
-Work itself is stored as a `BoundFunction`, viewable in the `impl/BoundFunction.hpp` file. For Polymorphism reasons, we actually store it as a pointer to its 
-abstract class `GenericBoundFunction`, but we will talk about `BoundFunction` here. `BoundFunction` is a template class that takes in a function pointer & arguments
-to pass into the function pointer. The full implementation can be seen in `BoundFunction.hpp`.
+Work itself is stored as a `BoundFunction`, viewable in the `impl/BoundFunction.hpp` file. A `BoundFunction` refers to a function bound to its arguments. For Polymorphism reasons, we actually store it as a pointer to its abstract class `GenericBoundFunction`, but we will talk about `BoundFunction` here. `BoundFunction` is a template class that takes in a function pointer & arguments
+to pass into the function pointer. The full implementation can be seen in `bound_function.hpp`.
 
-There are two `BoundFunction` templates - one is the default, that takes in `<ReturnType, ArgPack...>` as its template arguments, and the other is a specialization for functions that return `void` (so `<void, ArgPack...>`).
+There are two `BoundFunction` templates - one is the default, that takes in `<ReturnType, ArgPack...>` as its template arguments, and the other is a specialization for functions that return `void` (so `<void, ArgPack...>`). This is because function results are returned via `std::future<ReturnType>`, which expects different behavior if we instantiate a `std::future<void>`. These both inherit from the abstract class `GenericBoundFunction` to provide the same interface. `BoundFunction`s store functions as a const function pointer, and the arguments are stored via `std::tuple<ArgTypes...>`. 
+
+`impl/bound)function.hpp` and `impl/bound_function.tpp` contain the code for this, so feel free to take a look. I will finish this documentation later.
 
