@@ -5,6 +5,7 @@
 #include "utils/construction_logger.hpp"
 
 #include <chrono>
+#include <string>
 #include <thread>
 
 void demo_func(ConstructionLogger i)
@@ -13,7 +14,7 @@ void demo_func(ConstructionLogger i)
     std::this_thread::sleep_for(std::chrono::milliseconds(200) );
 }
 
-int main()
+void demo_threadpool()
 {
     ConstructionLogger c(false);
 
@@ -38,4 +39,27 @@ int main()
     STOP_TIMER("single-threaded")
 
     ConstructionLogger::report();
+}
+
+int test(int i)
+{
+    std::cout << i;
+    std::cout.flush();
+    return i;
+}
+
+#include <unistd.h>
+
+int main()
+{
+    // demo_threadpool();
+    ThreadPool ptp(8);
+
+    std::string s = "asdf";
+    for(int a = 0; a < 8000; a++)
+    {
+        ptp.submit_task(test, a);
+    }
+
+    sleep(1);
 }

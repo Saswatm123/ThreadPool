@@ -1,4 +1,7 @@
 #include "../threadpool.hpp"
+#include <algorithm>
+
+#include <iostream> // TODO: DELETE
 
 void ThreadPool::wait_for_task()
 {
@@ -22,10 +25,11 @@ void ThreadPool::wait_for_task()
         // Delete task from storage
         u_lock.lock();
 
-        if( !this->task_queue.empty() )
+        if (*current_task_ptr != nullptr)
         {
             delete *current_task_ptr;
         }
+
         this->task_storage.erase(current_task_ptr);
     }
 }
@@ -56,7 +60,19 @@ ThreadPool::~ThreadPool()
             }
             else
             {
+                // TODO: Maybe add a force thread kill, along with memory cleanup after? Don't forget to delete memory of active thread as well.
                 t.detach();
+            }
+        }
+    );
+
+    // In case there are any tasks left in task storage (for whatever reason - complete_upon_destruction = 0,
+    // some uncaught exception somewhere, etc. Redunancy here isn't a big deal.)
+    std::for_each(this->task_storage.begin(), this->task_storage.end(),
+        [](GenericBoundFunction* task_ptr){
+            if(task_ptr != nullptr)
+            {
+                delete task_ptr;
             }
         }
     );
