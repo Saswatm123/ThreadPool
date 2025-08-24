@@ -21,10 +21,10 @@ class ThreadPool
     std::vector<std::thread> thread_container;
 
     // Tasks are stored in a Linked List for fast removal & addition
-    std::list< GenericBoundFunction* > task_storage;
+    std::list< std::shared_ptr<GenericBoundFunction> > task_storage;
 
     // Iterators pointing to the tasks are stored in a task queue
-    std::queue< std::list<GenericBoundFunction*>::iterator > task_queue;
+    std::queue< std::list< std::shared_ptr<GenericBoundFunction> >::iterator > task_queue;
 
     // Threads are initialized on this function. Threads sleep inside this function
     // on condition_variable check_task and wait till there is an open task to complete,

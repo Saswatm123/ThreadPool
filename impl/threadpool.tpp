@@ -1,7 +1,8 @@
+#include <memory>
 template<typename ReturnType, typename... ArgTypes, typename... ArgumentFwdTypes>
 std::future<ReturnType> ThreadPool::submit_task(ReturnType(function)(ArgTypes...), ArgumentFwdTypes&&... args)
 {
-    BoundFunction<ReturnType, ArgTypes...>* new_task = new BoundFunction<ReturnType, ArgTypes...>(function, std::forward<ArgumentFwdTypes>(args)... );
+    std::shared_ptr< BoundFunction<ReturnType, ArgTypes...> > new_task = std::make_shared< BoundFunction<ReturnType, ArgTypes...> >( function, std::forward<ArgumentFwdTypes>(args)... );
 
     std::unique_lock<std::mutex> u_lock(this->queue_guard);
 

@@ -41,11 +41,10 @@ void demo_threadpool()
     ConstructionLogger::report();
 }
 
-int test(int i)
+void test(int i)
 {
-    std::cout << i;
-    std::cout.flush();
-    return i;
+    //std::cout << i;
+    //std::cout.flush();
 }
 
 #include <unistd.h>
@@ -53,7 +52,7 @@ int test(int i)
 int main()
 {
     // demo_threadpool();
-    ThreadPool ptp(8);
+    ThreadPool ptp(80);
 
     std::string s = "asdf";
     for(int a = 0; a < 8000; a++)
