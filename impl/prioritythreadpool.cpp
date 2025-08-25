@@ -1,0 +1,61 @@
+#include "../prioritythreadpool.hpp"
+#include <algorithm>
+
+void PriorityThreadPool::wait_for_task()
+{
+    std::unique_lock<std::mutex> u_lock(this->queue_guard);
+    while( !(this->task_queue.empty() && this->end_tasks) )
+    {
+        this->check_task.wait(u_lock, [&](){return !this->task_queue.empty() || this->end_tasks;} );
+
+        if(this->end_tasks && ( (this->complete_upon_destruction && this->task_queue.empty() ) || !this->complete_upon_destruction ) )
+        {
+            break;
+        }
+
+        std::list< std::shared_ptr<GenericBoundFunction> >::iterator current_task_ptr = this->task_queue.top().first;
+        this->task_queue.pop();
+
+        u_lock.unlock();
+
+        (*current_task_ptr)->execute();
+
+        // Delete task from storage
+        u_lock.lock();
+
+        this->task_storage.erase(current_task_ptr);
+    }
+}
+
+unsigned PriorityThreadPool::get_thread_count()
+{
+    return thread_count;
+}
+
+PriorityThreadPool::PriorityThreadPool(unsigned thread_count, bool complete_upon_destruction)
+:end_tasks(false), thread_count(thread_count), complete_upon_destruction(complete_upon_destruction)
+{
+    for(int i = 0; i < thread_count; i++)
+    {
+        this->thread_container.push_back(std::thread( &PriorityThreadPool::wait_for_task, this) );
+    }
+}
+
+PriorityThreadPool::~PriorityThreadPool()
+{
+    this->end_tasks = true;
+    std::for_each(this->thread_container.begin(), this->thread_container.end(),
+        [&](std::thread& t){
+            this->check_task.notify_all();
+            if(this->complete_upon_destruction)
+            {
+                t.join();
+            }
+            else
+            {
+                // TODO: Maybe add a force thread kill, along with memory cleanup after? Don't forget to delete memory of active thread as well.
+                t.detach();
+            }
+        }
+    );
+}
