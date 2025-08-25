@@ -7,6 +7,7 @@
 #include <chrono>
 #include <string>
 #include <thread>
+#include <unistd.h> // sleep
 
 void demo_func(ConstructionLogger i)
 {
@@ -14,17 +15,22 @@ void demo_func(ConstructionLogger i)
     std::this_thread::sleep_for(std::chrono::milliseconds(200) );
 }
 
-void demo_threadpool()
+void demo_threadpool(unsigned n_threads, unsigned n_tasks = -1)
 {
+    if(n_tasks == -1)
+    {
+        n_tasks = n_threads * 2;
+    }
+
     ConstructionLogger c(false);
 
     INIT_TIMER
     {
-        ThreadPool tp(8);
+        ThreadPool tp(n_threads);
 
         START_TIMER
 
-        for(int a = 0; a < 16; a++)
+        for(int a = 0; a < n_tasks; a++)
         {
             tp.submit_task(demo_func, c);
         }
@@ -32,7 +38,7 @@ void demo_threadpool()
     STOP_TIMER("multi-threaded")
 
     START_TIMER
-    for(int a = 0; a < 16; a++)
+    for(int a = 0; a < n_tasks; a++)
     {
         demo_func(c);
     }
@@ -41,17 +47,9 @@ void demo_threadpool()
     ConstructionLogger::report();
 }
 
-void test(int i)
-{
-    //std::cout << i;
-    //std::cout.flush();
-}
-
-#include <unistd.h>
-
 int main()
 {
-    // demo_threadpool();
+    /*
     ThreadPool ptp(80);
 
     std::string s = "asdf";
@@ -61,4 +59,7 @@ int main()
     }
 
     sleep(1);
+    */
+
+    demo_threadpool(4000, 160);
 }
